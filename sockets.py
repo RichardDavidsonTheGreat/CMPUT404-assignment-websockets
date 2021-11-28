@@ -105,7 +105,6 @@ def hello():
     '''Return something coherent here.. perhaps redirect to /static/index.html '''
     #https://www.w3schools.com/python/python_try_except.asp
     try:
-        #https://stackoverflow.com/questions/14343812/redirecting-to-url-in-flask
         return flask.redirect("/static/index.html") #redirect to /static/index.html
     except:
         #https://stackoverflow.com/questions/7824101/return-http-status-code-201-in-flask
