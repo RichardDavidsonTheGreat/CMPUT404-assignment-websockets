@@ -83,6 +83,10 @@ https://stackoverflow.com/questions/12435297/how-do-i-jsonify-a-list-in-flask an
 
 https://www.w3schools.com/python/python_dictionaries_access.asp for information on how to get key and value from python dictionary
 
+https://stackoverflow.com/questions/1168807/how-can-i-add-a-key-value-pair-to-a-javascript-object how to create a javascript object with a certain key value
+
+https://stackoverflow.com/questions/17635866/get-values-from-an-object-in-javascript how to get the key and value of a javascript object
+
 
 Contributors
 ============
