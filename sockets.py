@@ -26,6 +26,23 @@ app = Flask(__name__)
 sockets = Sockets(app)
 app.debug = True
 
+def send_all(msg):
+    for client in myWorld.listeners:
+        client.put(msg)
+
+def send_all_json(obj):
+    send_all(json.dumps(obj))
+
+class Client:
+    def __init__(self):
+        self.queue = queue.Queue()
+
+    def put(self, v):
+        self.queue.put_nowait(v)
+
+    def get(self):
+        return self.queue.get()
+
 class World:
     def __init__(self):
         self.clear()
@@ -43,7 +60,6 @@ class World:
 
     def set(self, entity, data):
         self.space[entity] = data
-        self.update_listeners( entity )
 
     def update_listeners(self, entity):
         '''update the set listeners'''
@@ -64,24 +80,56 @@ myWorld = World()
 def set_listener( entity, data ):
     ''' do something with the update ! '''
 
-myWorld.add_set_listener( set_listener )
+#myWorld.add_set_listener( set_listener )
         
 @app.route('/')
 def hello():
     '''Return something coherent here.. perhaps redirect to /static/index.html '''
-    return None
+    #https://www.w3schools.com/python/python_try_except.asp
+    try:
+        #https://stackoverflow.com/questions/14343812/redirecting-to-url-in-flask
+        return flask.redirect("/static/index.html") #redirect to /static/index.html
+    except:
+        #https://stackoverflow.com/questions/7824101/return-http-status-code-201-in-flask
+        #https://stackoverflow.com/questions/12435297/how-do-i-jsonify-a-list-in-flask
+        return json.dumps("Error Redirecting"), 500 #500 not 400 because a redirection error would be on the server side
 
 def read_ws(ws,client):
     '''A greenlet function that reads from the websocket and updates the world'''
     # XXX: TODO IMPLEMENT ME
-    return None
+    try:
+        while True:
+            msg = ws.receive()
+            print("WS RECV: %s" % msg)
+            if (msg is not None):
+                packet = json.loads(msg)
+                #https://www.w3schools.com/python/python_dictionaries_access.asp
+                for key in packet.keys():
+                    myWorld.set(key,packet[key])
+                send_all_json( packet )
+            else:
+                break
+    except:
+        '''Done'''
 
 @sockets.route('/subscribe')
 def subscribe_socket(ws):
     '''Fufill the websocket URL of /subscribe, every update notify the
        websocket and read updates from the websocket '''
     # XXX: TODO IMPLEMENT ME
-    return None
+    client = Client()
+    myWorld.add_set_listener(client)
+    g = gevent.spawn( read_ws, ws, client )    
+    try:
+        while True:
+            # block here
+            msg = client.get()
+            ws.send(msg)
+    except Exception as e:# WebSocketError as e:
+        print("WS Error %s" % e)
+    finally:
+        clients.remove(client)
+        gevent.kill(g)
 
 
 # I give this to you, this is how you get the raw body/data portion of a post in flask
@@ -99,23 +147,62 @@ def flask_post_json():
 @app.route("/entity/<entity>", methods=['POST','PUT'])
 def update(entity):
     '''update the entities via this interface'''
-    return None
+    #https://www.w3schools.com/python/python_try_except.asp
+    try:
+        data = flask_post_json() #get the body using the given flask method
+        myWorld.set(entity,data) #use the given set function to add an entity to our world
+        #https://stackoverflow.com/questions/12435297/how-do-i-jsonify-a-list-in-flask
+        data = json.dumps(data) #get the JSON of the data from the request
+        #https://stackoverflow.com/questions/7824101/return-http-status-code-201-in-flask
+        return data, 200 #return the data of the request in JSON format with status code 200
+    except:
+        #https://stackoverflow.com/questions/7824101/return-http-status-code-201-in-flask
+        #https://stackoverflow.com/questions/12435297/how-do-i-jsonify-a-list-in-flask
+        return json.dumps("Error Adding entity to world"), 404
 
 @app.route("/world", methods=['POST','GET'])    
 def world():
     '''you should probably return the world here'''
-    return None
+    #https://www.w3schools.com/python/python_try_except.asp
+    try:
+        #https://stackoverflow.com/questions/12435297/how-do-i-jsonify-a-list-in-flask
+        requestedWorld = json.dumps(myWorld.world()) #Get what the world variable contains in JSON format
+        #https://stackoverflow.com/questions/7824101/return-http-status-code-201-in-flask
+        return requestedWorld, 200 #return the world with status code 200
+    except:
+        #https://stackoverflow.com/questions/12435297/how-do-i-jsonify-a-list-in-flask
+        #https://stackoverflow.com/questions/7824101/return-http-status-code-201-in-flask
+        return json.dumps("Error retreiving world"), 500 #500 not 400 not being able to return the world would be a server side error
 
 @app.route("/entity/<entity>")    
 def get_entity(entity):
     '''This is the GET version of the entity interface, return a representation of the entity'''
-    return None
+    #https://www.w3schools.com/python/python_try_except.asp
+    try:
+        #https://stackoverflow.com/questions/12435297/how-do-i-jsonify-a-list-in-flask
+        requestedEntity = json.dumps(myWorld.get(entity)) #use the built in get method to get the specific entity and transform it to JSON
+        #https://stackoverflow.com/questions/7824101/return-http-status-code-201-in-flask
+        return requestedEntity, 200 #return the entity as JSON with status code 200
+    except:
+        #https://stackoverflow.com/questions/12435297/how-do-i-jsonify-a-list-in-flask
+        #https://stackoverflow.com/questions/7824101/return-http-status-code-201-in-flask
+        return json.dumps("Error retreiving entity"), 404
+
 
 
 @app.route("/clear", methods=['POST','GET'])
 def clear():
     '''Clear the world out!'''
-    return None
+    #https://www.w3schools.com/python/python_try_except.asp
+    try:
+        myWorld.clear() #use the provided method to clear the world
+        #https://stackoverflow.com/questions/12435297/how-do-i-jsonify-a-list-in-flask
+        #https://stackoverflow.com/questions/7824101/return-http-status-code-201-in-flask
+        return json.dumps("World cleared successfully"), 200
+    except:
+        #https://stackoverflow.com/questions/12435297/how-do-i-jsonify-a-list-in-flask
+        #https://stackoverflow.com/questions/7824101/return-http-status-code-201-in-flask
+        return json.dumps("World was not cleared successfully"), 500 #500 not 400 not being able to clear the world would be a server side error
 
 
 
@@ -125,4 +212,5 @@ if __name__ == "__main__":
         and run
         gunicorn -k flask_sockets.worker sockets:app
     '''
-    app.run()
+    #app.run()
+    os.system("gunicorn -k flask_sockets.worker sockets:app")

@@ -44,24 +44,53 @@ debug("Test");
 
 world = {};
 
+function fetchGetJSON(url){
+    //https://developer.mozilla.org/en-US/docs/Web/API/Request
+    var request = new Request(url); //create our GET request for the world
+    return fetch(request).then((response) => { //fetch creates a promise and here is the callback for when it resolves
+        if (response.status === 200) { //if our request was a success
+            return response.json(); //return a promise
+        }
+        else{
+            alert("Something went wrong: " + response.status);
+        }
+
+    });
+
+}
+
+function getWorld() {
+    var url = "http://"+location.host+"/world"; //this will call the /world GET api on the server side to get the world
+    fetchGetJSON(url).then((response) => {
+        world =  response; //set our local world to the world state gotten from the server
+        drawNextFrame();
+    });
+    drawFrame();
+}
+
+
 //XXX: TODO Make this prettier!
 function drawCircle(context,entity) {
     with(context) {
-        beginPath();                
-        lineWidth = 3;
+        beginPath();              
+        lineWidth = 7; //changes to make the outline of the circles thickers
         var x = entity["x"];
         var y = entity["y"];
         //moveTo(x,y);
-        fillStyle = entity["colour"];
-        strokeStyle = fillStyle;
-        arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);  
-        stroke();                                
+        fillStyle = entity["colour"]; //the internal colour
+        strokeStyle = entity["borderColour"]; //the outline colour
+        arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);   
+        fill(); //fill the circles with the internal colour 
+        stroke(); //colour the outline with the outline colour           
     }
 }
 
 function prepEntity(entity) {
     if (!entity["colour"]) {
         entity["colour"] = "#FF0000";
+    }
+    if (!entity["borderColour"]) { //incase no fill colour is supplied
+        entity["borderColour"] = "#FF0000";
     }
     if (!entity["radius"]) {
         entity["radius"] = 50;
@@ -124,6 +153,12 @@ function getPosition(e) {
 function addEntity(entity, data) {
     world[entity] = data;
     drawNextFrame(); // (but should we?)
+
+    //https://stackoverflow.com/questions/1168807/how-can-i-add-a-key-value-pair-to-a-javascript-object
+    packet = {}
+    packet[entity] = data
+    //packet = { entity : data }
+    socket.send(JSON.stringify(packet))
     //XXX: Send a XHTML Request that updates the entity you just modified!
 }
 var counter = 0;
@@ -230,17 +265,46 @@ mouse = (function() {
 
 // Add the application specific mouse listeners!
 //XXX: TODO Make these prettier!
+//Got all these colours (other than the basic ones ie red orange yellow...) from the following ressources
+//https://www.colorhexa.com/ff8c00
+//https://clrs.cc/
+//https://html-color.codes/purple
+//https://html-color.codes/green
+var colourCounter = 0; //this is used to cycle through the colours and creates the rainbow effect in the circles
+var colours = ["red","orange","yellow","green","blue","purple"]; //for the interior of the circles
+var borderColours = ["maroon",'#ff4c00','#ffb700',"darkgreen","darkslateblue","rebeccapurple"]; //for the circles border
+
+
 mouse.mousedowners.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'blue'});
+    var currentColour = colours[(colourCounter)%6]; //modulo here so that we are cycling through the colours
+    var borderColour = borderColours[(colourCounter)%6]; //modulo here so that we are cycling through the colours
+    colourCounter ++; //makes sure the next colour is used for the next circle so give the rainbow effect
+    addEntityWithoutName({'x':x,'y':y,'colour':currentColour,'borderColour':borderColour});
 });
 
 mouse.mouseuppers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'red'});
+    var currentColour = colours[(colourCounter)%6]; //modulo here so that we are cycling through the colours
+    var borderColour = borderColours[(colourCounter)%6]; //modulo here so that we are cycling through the colours
+    colourCounter ++; //makes sure the next colour is used for the next circle so give the rainbow effect
+    addEntityWithoutName({'x':x,'y':y,'colour':currentColour,'borderColour':borderColour});
 });
 
+var smallCircleRadius = 25; //starting radius for the small circles
+change = -1; //how much we should change the radius of the small circles each time we add a small circles to give it the effect
+//of the small circles getting smaller and then bigger
 mouse.mousedraggers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'green',
-                          'radius':10});
+    var currentColour = colours[(colourCounter)%6]; //modulo here so that we are cycling through the colours
+    var borderColour = borderColours[(colourCounter)%6]; //modulo here so that we are cycling through the colours
+    colourCounter ++; //makes sure the next colour is used for the next circle so give the rainbow effect
+    addEntityWithoutName({'x':x,'y':y,'colour':currentColour, 'borderColour':borderColour,
+                          'radius':smallCircleRadius});
+    if (smallCircleRadius == 25){ //small circles are at the max size start decrementing
+        change = -1;
+    }
+    if (smallCircleRadius == 1){ //small circles are at the min size start incrementing
+        change = 1;
+    }
+    smallCircleRadius = smallCircleRadius + change; //change the radius for the next small circle
 });
 
 
@@ -254,6 +318,7 @@ function wsSetup() {
     socket = new WebSocket(url);
     socket.onopen = function() {
         //XXX: TODO What are you going to do here?
+        getWorld()
     };
     socket.onerror = function(msg) {
         debug("WebSocket Error:" + msg.data);
@@ -261,7 +326,31 @@ function wsSetup() {
     socket.onmessage = function(msg) {  
         try {
             debug("WebSocket Recv:" + msg.data);
-            //XXX: TODO What are you going to do here?            
+            myData = JSON.parse(msg.data)
+            //https://stackoverflow.com/questions/17635866/get-values-from-an-object-in-javascript
+            for(key in myData) {
+                if(myData.hasOwnProperty(key)) {
+                var value = myData[key];
+                world[key] = value
+            drawNextFrame()
+        //do something with value;
+                }
+            }
+            //for (var key in myData) {
+            //    world[key] = myData
+            //}
+            //drawNextFrame();
+            //drawFrame();
+            //XXX: TODO What are you going to do here?
+            //if (Object.keys(data).length !== 0){
+            //    for (var key in data) {
+            //        world[key] = data;
+            //        console.log(world);
+            //    }
+            //    drawNextFrame();
+            //    drawFrame();
+            //}
+            //world = JSON.stringify(msg.data)   
         } catch (e) {
             alert("socket on message: " + e);
         }
