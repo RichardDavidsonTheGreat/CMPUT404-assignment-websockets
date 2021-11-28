@@ -13,6 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+#Information and much of the code responsible for implementing the observer pattern with web sockets and clients and was taken from the CMPUT404 class notes
+
+#In particular https://github.com/uofa-cmput404/cmput404-slides/tree/master/examples/ObserverExampleAJAX
+
+#Copyright 2013 Abram Hindle
+
+#Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+
+ #   http://www.apache.org/licenses/LICENSE-2.0
+
+#Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
+
 import flask
 from flask import Flask, request
 from flask_sockets import Sockets
@@ -27,14 +40,17 @@ sockets = Sockets(app)
 app.debug = True
 
 def send_all(msg):
+    #whenever we get a message from a socket add it to all listeners (which are queues)
     for client in myWorld.listeners:
         client.put(msg)
 
 def send_all_json(obj):
     send_all(json.dumps(obj))
 
+#class for our listeners
 class Client:
     def __init__(self):
+        #each listener is a queue
         self.queue = queue.Queue()
 
     def put(self, v):
@@ -99,12 +115,14 @@ def read_ws(ws,client):
     # XXX: TODO IMPLEMENT ME
     try:
         while True:
+            #the message we get from the websocket
             msg = ws.receive()
             print("WS RECV: %s" % msg)
             if (msg is not None):
                 packet = json.loads(msg)
-                #https://www.w3schools.com/python/python_dictionaries_access.asp
+                #for information on how to get key and value from python dictionary https://www.w3schools.com/python/python_dictionaries_access.asp
                 for key in packet.keys():
+                    #set our world with the entity and value we just received from the web socket
                     myWorld.set(key,packet[key])
                 send_all_json( packet )
             else:
@@ -118,12 +136,12 @@ def subscribe_socket(ws):
        websocket and read updates from the websocket '''
     # XXX: TODO IMPLEMENT ME
     client = Client()
-    myWorld.add_set_listener(client)
-    g = gevent.spawn( read_ws, ws, client )    
+    myWorld.add_set_listener(client) #create a new listener for our new socket
+    g = gevent.spawn( read_ws, ws, client ) #spawn a thread to read from the web socket
     try:
         while True:
             # block here
-            msg = client.get()
+            msg = client.get() #once there is data in the queue get it and send it through the socket
             ws.send(msg)
     except Exception as e:# WebSocketError as e:
         print("WS Error %s" % e)
