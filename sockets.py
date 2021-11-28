@@ -15,7 +15,9 @@
 #
 #Information and much of the code responsible for implementing the observer pattern with web sockets and clients and was taken from the CMPUT404 class notes
 
-#In particular https://github.com/uofa-cmput404/cmput404-slides/tree/master/examples/ObserverExampleAJAX
+#In particular https://github.com/uofa-cmput404/cmput404-slides/blob/master/examples/WebSocketsExamples/chat.py
+#and
+#https://github.com/uofa-cmput404/cmput404-slides/blob/master/examples/WebSocketsExamples/static/chat.html
 
 #Copyright 2013 Abram Hindle
 
