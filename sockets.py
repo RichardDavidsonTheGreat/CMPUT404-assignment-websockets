@@ -27,6 +27,7 @@
 
 #Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+#Much of the code was created for a previous project in this class and can be found in https://github.com/RichardDavidsonTheGreat/CMPUT404-assignment-ajax and everything is LICENSE'D under the Apache 2 license by Abram Hindle
 
 import flask
 from flask import Flask, request
