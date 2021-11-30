@@ -59,6 +59,8 @@ I (Richard Davidson 1501248) used the following ressources in completeing this a
 
 Information and much of the code responsible for the use of websockets and implementing the listener pattern with websockets is not mine and was taken from the CMPUT404 class github repository in particular https://github.com/uofa-cmput404/cmput404-slides/blob/master/examples/WebSocketsExamples/chat.py and https://github.com/uofa-cmput404/cmput404-slides/blob/master/examples/WebSocketsExamples/static/chat.html
 
+Much of the code was created for a previous project in this class and can be found in https://github.com/RichardDavidsonTheGreat/CMPUT404-assignment-ajax and everything is LICENSE'D under the Apache 2 license by Abram Hindle
+
 I also used the following online ressources:
 
 https://developer.mozilla.org/en-US/docs/Web/API/Request for information on creating and sending different types of requests with Fetch
