@@ -1,17 +1,4 @@
-//Information and much of the code responsible for implementing the observer pattern with web sockets and clients and was taken from the CMPUT404 class notes
 
-//In particular https://github.com/uofa-cmput404/cmput404-slides/blob/master/examples/WebSocketsExamples/chat.py
-//and
-//https://github.com/uofa-cmput404/cmput404-slides/blob/master/examples/WebSocketsExamples/static/chat.html
-
-//Copyright 2013 Abram Hindle
-
-//Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
-//http://www.apache.org/licenses/LICENSE-2.0
-
-//Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
-
-//Much of the code was created for a previous project in this class and can be found in https://github.com/RichardDavidsonTheGreat/CMPUT404-assignment-ajax and everything is LICENSE'D under the Apache 2 license by Abram Hindle
 
 <!DOCTYPE HTML>
 <html> 
@@ -43,6 +30,21 @@
 
     <script>
       // Fix me
+
+//Information and much of the code responsible for implementing the observer pattern with web sockets and clients and was taken from the CMPUT404 class notes
+
+//In particular https://github.com/uofa-cmput404/cmput404-slides/blob/master/examples/WebSocketsExamples/chat.py
+//and
+//https://github.com/uofa-cmput404/cmput404-slides/blob/master/examples/WebSocketsExamples/static/chat.html
+
+//Copyright 2013 Abram Hindle
+
+//Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+//http://www.apache.org/licenses/LICENSE-2.0
+
+//Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
+//Much of the code was created for a previous project in this class and can be found in https://github.com/RichardDavidsonTheGreat/CMPUT404-assignment-ajax and everything is LICENSE'D under the Apache 2 license by Abram Hindle
 var canvas = document.getElementById('c');
 var host = window.location.host;
 var context = canvas.getContext("2d");
@@ -344,10 +346,13 @@ function wsSetup() {
             //how to get the key and value of a javascript object https://stackoverflow.com/questions/17635866/get-values-from-an-object-in-javascript
             for(key in myData) {
                 if(myData.hasOwnProperty(key)) {
-                var value = myData[key];
-                world[key] = value
+                    var value = myData[key];
+                    world[key] = value
+                }
+            }
             drawNextFrame() //sets the flag so that we draw the world
-        } catch (e) {
+        } 
+        catch (e) {
             alert("socket on message: " + e);
         }
     }; 
